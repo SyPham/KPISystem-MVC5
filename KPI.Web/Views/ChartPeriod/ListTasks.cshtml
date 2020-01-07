@@ -1,0 +1,129 @@
+﻿@using PagedList;
+@using PagedList.Mvc;
+@using MvcBreadCrumbs
+
+@model IPagedList<KPI.Model.ViewModel.ActionPlanTagVM>
+@{
+    int count = 1;
+    Uri myUri = new Uri(Request.Url.ToString());
+    string code = HttpUtility.ParseQueryString(myUri.Query).Get("code");
+}
+@Html.Raw(BreadCrumb.Display())
+
+<div class="box">
+    <div class="box-header">
+        <h3 class="box-title">List Tasks</h3>
+    </div>
+
+    <div class="box-body box-scrollbar" style="overflow-x:scroll">
+        <table class="table">
+            <tr>
+                <th>.No</th>
+                <th>
+                    OC
+                </th>
+                <th>
+                    KPIName
+                </th>
+                <th>
+                    TaskName
+                </th>
+                <th>
+                    Description
+                </th>
+                <th>
+                    PIC
+                </th>
+                <th>
+                    DueDate
+                </th>
+                <th>
+                    UpdateSheduleDate
+                </th>
+                <th>
+                    ActualFinishDate
+                </th>
+                <th>
+                    Status
+                </th>
+                <th>
+                    Approved
+                </th>
+
+                <th>
+                    CreatedBy
+                </th>
+                <th>
+                    CreatedDate
+                </th>
+            </tr>
+
+            @foreach (var item in Model)
+            {
+                <tr class="@(count/2==0?"info":"")">
+                    <td>@count</td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.OC)
+                    </td>
+                    <td>
+                        <a href="@item.URL">@item.KPIName</a>
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.TaskName)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Description)
+                    </td>
+                    <td>
+                        @{
+                            if (item.PIC.IndexOf(",") != -1)
+                            {
+                                foreach (var a in item.PIC.Split(','))
+                                {
+                                    <span class='badge bg-primary'>@a</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class='badge bg-primary'>@item.PIC</span>
+
+                            }
+                        }
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.DueDate)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.UpdateSheduleDate)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.ActualFinishDate)
+                    </td>
+                    <td>
+                        <span class='badge @(item.Status == true ?"bg-green": "bg-red")'>@(item.Status == true ? "Finished" : "Not Finished")</span>
+                    </td>
+                    <td>
+                        <span class='badge @(item.Status == true ?"bg-green": "bg-red")'>@(item.Status == true ? "Approved" : "Not Approved")</span>
+
+                    </td>
+
+                    <td>
+                        @Html.DisplayFor(modelItem => item.CreatedBy)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.CreatedDate)
+                    </td>
+
+                </tr>
+                count++;
+            }
+
+        </table>
+    </div>
+    <div class="box-footer">
+        @Html.PagedListPager(Model, numberpage => Url.Action("ListTasks", new { code = code, page = numberpage }), new PagedListRenderOptions { LinkToFirstPageFormat = "First", LinkToPreviousPageFormat = "Previous", LinkToNextPageFormat = "Next", LinkToLastPageFormat = "Last", MaximumPageNumbersToDisplay = 5 })
+        <small class="text-danger">*Note: Please click "KPI Name" to go to the "Action Plan Page".</small>
+    </div>
+
+</div>
+
