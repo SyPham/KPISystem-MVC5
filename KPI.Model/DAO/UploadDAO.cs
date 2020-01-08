@@ -845,68 +845,75 @@ namespace KPI.Model.DAO
             return actionPlans;
         }
 
-        public async Task<object> LoadActionPlan(string role, int page, int pageSize)
+        public async Task<object> LoadActionPlan(string role, int page, int pageSize,int userid)
         {
             var model = new List<ActionPlanTagVM>();
             switch (role.ToSafetyString().ToUpper())
             {
                 case "MAN":
-                    model = (await (from d in _dbContext.Datas
-                                    join ac in _dbContext.ActionPlans on d.ID equals ac.DataID
-                                    join kpilevelcode in _dbContext.KPILevels on d.KPILevelCode equals kpilevelcode.KPILevelCode
-                                    join own in _dbContext.Managers on kpilevelcode.ID equals own.KPILevelID
-                                    select new
-                                    {
-                                        ac.ID,
-                                        TaskName = ac.Title,
-                                        Description = ac.Description,
-                                        DuaDate = ac.Deadline,
-                                        UpdateSheuleDate = ac.UpdateSheduleDate,
-                                        ActualFinishDate = ac.ActualFinishDate,
-                                        Status = ac.Status,
-                                        PIC = ac.Tag,
-                                        Code=ac.KPILevelCode,
-                                        Approved = ac.ApprovedStatus,
-                                        KPIID = _dbContext.KPILevels.FirstOrDefault(a => a.KPILevelCode == d.KPILevelCode).KPIID,
-                                        KPILevelID = _dbContext.KPILevels.FirstOrDefault(a => a.KPILevelCode == d.KPILevelCode).ID
-                                    }).Distinct()
-                      .ToListAsync())
-                      .Select(x => new ActionPlanTagVM
-                      {
-                          TaskName = x.TaskName,
-                          Description = x.Description,
-                          DueDate = x.DuaDate.ToString("dddd, dd MMMM yyyy"),
-                          UpdateSheduleDate = x.UpdateSheuleDate?.ToString("dddd, dd MMMM yyyy"),
-                          ActualFinishDate = x.ActualFinishDate?.ToString("dddd, dd MMMM yyyy"),
-                          Status = x.Status,
-                          PIC = x.PIC,
-                          OC = new LevelDAO().GetNode(x.Code),
-                          Approved = x.Approved,
-                          KPIName = _dbContext.KPIs.FirstOrDefault(a => a.ID == x.KPIID).Name,
-                          URL= _dbContext.Notifications.FirstOrDefault(a=> a.ActionplanID == x.ID)?.Link ?? "/"
-                      }).ToList();
-                    break;
-                case "OWN":
+                    if (_dbContext.Managers.Any(x => x.UserID.Equals(userid)))
+                    {
+                        model = (await (from d in _dbContext.Datas
+                                        join ac in _dbContext.ActionPlans on d.ID equals ac.DataID
+                                        join kpilevelcode in _dbContext.KPILevels on d.KPILevelCode equals kpilevelcode.KPILevelCode
+                                        join own in _dbContext.Managers on kpilevelcode.ID equals own.KPILevelID
+                                        select new
+                                        {
+                                            ac.ID,
+                                            TaskName = ac.Title,
+                                            Description = ac.Description,
+                                            DuaDate = ac.Deadline,
+                                            UpdateSheuleDate = ac.UpdateSheduleDate,
+                                            ActualFinishDate = ac.ActualFinishDate,
+                                            Status = ac.Status,
+                                            PIC = ac.Tag,
+                                            Code = ac.KPILevelCode,
+                                            Approved = ac.ApprovedStatus,
+                                            KPIID = _dbContext.KPILevels.FirstOrDefault(a => a.KPILevelCode == d.KPILevelCode).KPIID,
+                                            KPILevelID = _dbContext.KPILevels.FirstOrDefault(a => a.KPILevelCode == d.KPILevelCode).ID
+                                        }).Distinct()
+                     .ToListAsync())
+                     .Select(x => new ActionPlanTagVM
+                     {
+                         TaskName = x.TaskName,
+                         Description = x.Description,
+                         DueDate = x.DuaDate.ToString("dddd, dd MMMM yyyy"),
+                         UpdateSheduleDate = x.UpdateSheuleDate?.ToString("dddd, dd MMMM yyyy"),
+                         ActualFinishDate = x.ActualFinishDate?.ToString("dddd, dd MMMM yyyy"),
+                         Status = x.Status,
+                         PIC = x.PIC,
+                         OC = new LevelDAO().GetNode(x.Code),
+                         Approved = x.Approved,
+                         KPIName = _dbContext.KPIs.FirstOrDefault(a => a.ID == x.KPIID).Name,
+                         URL = _dbContext.Notifications.FirstOrDefault(a => a.ActionplanID == x.ID)?.Link ?? "/"
+                     }).ToList();
+                        break;
 
-                    model = (await (from d in _dbContext.Datas
-                                    join ac in _dbContext.ActionPlans on d.ID equals ac.DataID
-                                    join kpilevelcode in _dbContext.KPILevels on d.KPILevelCode equals kpilevelcode.KPILevelCode
-                                    join own in _dbContext.Owners on kpilevelcode.ID equals own.KPILevelID
-                                    select new
-                                    {
-                                        ac.ID,
-                                        TaskName = ac.Title,
-                                        Description = ac.Description,
-                                        DuaDate = ac.Deadline,
-                                        UpdateSheuleDate = ac.UpdateSheduleDate,
-                                        ActualFinishDate = ac.ActualFinishDate,
-                                        Code=ac.KPILevelCode,
-                                        Status = ac.Status,
-                                        PIC = ac.Tag,
-                                        Approved = ac.ApprovedStatus,
-                                        KPIID = _dbContext.KPILevels.FirstOrDefault(a => a.KPILevelCode == d.KPILevelCode).KPIID,
-                                        KPILevelID = _dbContext.KPILevels.FirstOrDefault(a => a.KPILevelCode == d.KPILevelCode).ID
-                                    }).Distinct()
+                    }
+                    break;
+
+                case "OWN":
+                    if (_dbContext.Owners.Any(x => x.UserID.Equals(userid)))
+                    {
+                        model = (await (from d in _dbContext.Datas
+                                        join ac in _dbContext.ActionPlans on d.ID equals ac.DataID
+                                        join kpilevelcode in _dbContext.KPILevels on d.KPILevelCode equals kpilevelcode.KPILevelCode
+                                        join own in _dbContext.Owners on kpilevelcode.ID equals own.KPILevelID
+                                        select new
+                                        {
+                                            ac.ID,
+                                            TaskName = ac.Title,
+                                            Description = ac.Description,
+                                            DuaDate = ac.Deadline,
+                                            UpdateSheuleDate = ac.UpdateSheduleDate,
+                                            ActualFinishDate = ac.ActualFinishDate,
+                                            Code = ac.KPILevelCode,
+                                            Status = ac.Status,
+                                            PIC = ac.Tag,
+                                            Approved = ac.ApprovedStatus,
+                                            KPIID = _dbContext.KPILevels.FirstOrDefault(a => a.KPILevelCode == d.KPILevelCode).KPIID,
+                                            KPILevelID = _dbContext.KPILevels.FirstOrDefault(a => a.KPILevelCode == d.KPILevelCode).ID
+                                        }).Distinct()
                      .ToListAsync())
                      .Select(x => new ActionPlanTagVM
                      {
@@ -923,29 +930,32 @@ namespace KPI.Model.DAO
                          ,
                          URL = _dbContext.Notifications.FirstOrDefault(a => a.ActionplanID == x.ID)?.Link ?? "/"
                      }).ToList();
+                        break;
+                    }
                     break;
                 case "UPD":
-
-                    model = (await (from d in _dbContext.Datas
-                                    join ac in _dbContext.ActionPlans on d.ID equals ac.DataID
-                                    join kpilevelcode in _dbContext.KPILevels on d.KPILevelCode equals kpilevelcode.KPILevelCode
-                                    join own in _dbContext.Uploaders on kpilevelcode.ID equals own.KPILevelID
-                                    select new
-                                    {
-                                        ac.ID,
-                                        KPILevelCode = d.KPILevelCode,
-                                        TaskName = ac.Title,
-                                        Description = ac.Description,
-                                        DuaDate = ac.Deadline,
-                                        UpdateSheuleDate = ac.UpdateSheduleDate,
-                                        ActualFinishDate = ac.ActualFinishDate,
-                                        Code=ac.KPILevelCode,
-                                        Status = ac.Status,
-                                        PIC = ac.Tag,
-                                        Approved = ac.ApprovedStatus,
-                                        KPIID = _dbContext.KPILevels.FirstOrDefault(a => a.KPILevelCode == d.KPILevelCode).KPIID,
-                                        KPILevelID = _dbContext.KPILevels.FirstOrDefault(a => a.KPILevelCode == d.KPILevelCode).ID
-                                    }).Distinct()
+                    if (_dbContext.Uploaders.Any(x => x.UserID.Equals(userid)))
+                    {
+                        model = (await (from d in _dbContext.Datas
+                                        join ac in _dbContext.ActionPlans on d.ID equals ac.DataID
+                                        join kpilevelcode in _dbContext.KPILevels on d.KPILevelCode equals kpilevelcode.KPILevelCode
+                                        join own in _dbContext.Uploaders on kpilevelcode.ID equals own.KPILevelID
+                                        select new
+                                        {
+                                            ac.ID,
+                                            KPILevelCode = d.KPILevelCode,
+                                            TaskName = ac.Title,
+                                            Description = ac.Description,
+                                            DuaDate = ac.Deadline,
+                                            UpdateSheuleDate = ac.UpdateSheduleDate,
+                                            ActualFinishDate = ac.ActualFinishDate,
+                                            Code = ac.KPILevelCode,
+                                            Status = ac.Status,
+                                            PIC = ac.Tag,
+                                            Approved = ac.ApprovedStatus,
+                                            KPIID = _dbContext.KPILevels.FirstOrDefault(a => a.KPILevelCode == d.KPILevelCode).KPIID,
+                                            KPILevelID = _dbContext.KPILevels.FirstOrDefault(a => a.KPILevelCode == d.KPILevelCode).ID
+                                        }).Distinct()
                      .ToListAsync())
                      .Select(x => new ActionPlanTagVM
                      {
@@ -962,28 +972,31 @@ namespace KPI.Model.DAO
                          URL = _dbContext.Notifications.FirstOrDefault(a => a.ActionplanID == x.ID)?.Link ?? "/"
 
                      }).ToList();
+                        break;
+                    }
                     break;
                 case "SPO":
-
-                    model = (await (from d in _dbContext.Datas
-                                    join ac in _dbContext.ActionPlans on d.ID equals ac.DataID
-                                    join kpilevelcode in _dbContext.KPILevels on d.KPILevelCode equals kpilevelcode.KPILevelCode
-                                    join own in _dbContext.Sponsors on kpilevelcode.ID equals own.KPILevelID
-                                    select new
-                                    {
-                                        ac.ID,
-                                        TaskName = ac.Title,
-                                        Description = ac.Description,
-                                        DuaDate = ac.Deadline,
-                                        UpdateSheuleDate = ac.UpdateSheduleDate,
-                                        ActualFinishDate = ac.ActualFinishDate,
-                                        Status = ac.Status,
-                                        Code=ac.KPILevelCode,
-                                        PIC = ac.Tag,
-                                        Approved = ac.ApprovedStatus,
-                                        KPIID = _dbContext.KPILevels.FirstOrDefault(a => a.KPILevelCode == d.KPILevelCode).KPIID,
-                                        KPILevelID = _dbContext.KPILevels.FirstOrDefault(a => a.KPILevelCode == d.KPILevelCode).ID
-                                    }).Distinct()
+                    if (_dbContext.Sponsors.Any(x => x.UserID.Equals(userid)))
+                    {
+                        model = (await (from d in _dbContext.Datas
+                                        join ac in _dbContext.ActionPlans on d.ID equals ac.DataID
+                                        join kpilevelcode in _dbContext.KPILevels on d.KPILevelCode equals kpilevelcode.KPILevelCode
+                                        join own in _dbContext.Sponsors on kpilevelcode.ID equals own.KPILevelID
+                                        select new
+                                        {
+                                            ac.ID,
+                                            TaskName = ac.Title,
+                                            Description = ac.Description,
+                                            DuaDate = ac.Deadline,
+                                            UpdateSheuleDate = ac.UpdateSheduleDate,
+                                            ActualFinishDate = ac.ActualFinishDate,
+                                            Status = ac.Status,
+                                            Code = ac.KPILevelCode,
+                                            PIC = ac.Tag,
+                                            Approved = ac.ApprovedStatus,
+                                            KPIID = _dbContext.KPILevels.FirstOrDefault(a => a.KPILevelCode == d.KPILevelCode).KPIID,
+                                            KPILevelID = _dbContext.KPILevels.FirstOrDefault(a => a.KPILevelCode == d.KPILevelCode).ID
+                                        }).Distinct()
                     .ToListAsync())
                     .Select(x => new ActionPlanTagVM
                     {
@@ -993,35 +1006,39 @@ namespace KPI.Model.DAO
                         DueDate = x.DuaDate.ToString("dddd, dd MMMM yyyy"),
                         UpdateSheduleDate = x.UpdateSheuleDate?.ToString("dddd, dd MMMM yyyy"),
                         ActualFinishDate = x.ActualFinishDate?.ToString("dddd, dd MMMM yyyy"),
-                         OC = new LevelDAO().GetNode(x.Code),
+                        OC = new LevelDAO().GetNode(x.Code),
                         Status = x.Status,
                         PIC = x.PIC,
                         Approved = x.Approved,
                         URL = _dbContext.Notifications.FirstOrDefault(a => a.ActionplanID == x.ID)?.Link ?? "/"
 
                     }).ToList();
+                        break;
+                    }
                     break;
+
                 case "PAR":
-
-                    model = (await (from d in _dbContext.Datas
-                                    join ac in _dbContext.ActionPlans on d.ID equals ac.DataID
-                                    join kpilevelcode in _dbContext.KPILevels on d.KPILevelCode equals kpilevelcode.KPILevelCode
-                                    join own in _dbContext.Participants on kpilevelcode.ID equals own.KPILevelID
-                                    select new
-                                    {
-                                        ac.ID,
-                                        TaskName = ac.Title,
-                                        Description = ac.Description,
-                                        DuaDate = ac.Deadline,
-                                        UpdateSheuleDate = ac.UpdateSheduleDate,
-                                        ActualFinishDate = ac.ActualFinishDate,
-                                        Code=ac.KPILevelCode,
-                                        Status = ac.Status,
-                                        PIC = ac.Tag,
-                                        Approved = ac.ApprovedStatus,
-                                        KPIID = _dbContext.KPILevels.FirstOrDefault(a => a.KPILevelCode == d.KPILevelCode).KPIID,
-                                        KPILevelID = _dbContext.KPILevels.FirstOrDefault(a => a.KPILevelCode == d.KPILevelCode).ID
-                                    }).Distinct()
+                    if (_dbContext.Participants.Any(x => x.UserID.Equals(userid)))
+                    {
+                        model = (await (from d in _dbContext.Datas
+                                        join ac in _dbContext.ActionPlans on d.ID equals ac.DataID
+                                        join kpilevelcode in _dbContext.KPILevels on d.KPILevelCode equals kpilevelcode.KPILevelCode
+                                        join own in _dbContext.Participants on kpilevelcode.ID equals own.KPILevelID
+                                        select new
+                                        {
+                                            ac.ID,
+                                            TaskName = ac.Title,
+                                            Description = ac.Description,
+                                            DuaDate = ac.Deadline,
+                                            UpdateSheuleDate = ac.UpdateSheduleDate,
+                                            ActualFinishDate = ac.ActualFinishDate,
+                                            Code = ac.KPILevelCode,
+                                            Status = ac.Status,
+                                            PIC = ac.Tag,
+                                            Approved = ac.ApprovedStatus,
+                                            KPIID = _dbContext.KPILevels.FirstOrDefault(a => a.KPILevelCode == d.KPILevelCode).KPIID,
+                                            KPILevelID = _dbContext.KPILevels.FirstOrDefault(a => a.KPILevelCode == d.KPILevelCode).ID
+                                        }).Distinct()
                     .ToListAsync())
                     .Select(x => new ActionPlanTagVM
                     {
@@ -1031,14 +1048,17 @@ namespace KPI.Model.DAO
                         UpdateSheduleDate = x.UpdateSheuleDate?.ToString("dddd, dd MMMM yyyy"),
                         ActualFinishDate = x.ActualFinishDate?.ToString("dddd, dd MMMM yyyy"),
                         Status = x.Status,
-                         OC = new LevelDAO().GetNode(x.Code),
+                        OC = new LevelDAO().GetNode(x.Code),
                         PIC = x.PIC,
                         Approved = x.Approved,
                         KPIName = _dbContext.KPIs.FirstOrDefault(a => a.ID == x.KPIID).Name,
                         URL = _dbContext.Notifications.FirstOrDefault(a => a.ActionplanID == x.ID)?.Link ?? "/"
 
                     }).ToList();
+                        break;
+                    }
                     break;
+
                 default:
 
                     break;

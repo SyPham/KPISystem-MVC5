@@ -85,7 +85,7 @@
             //}
         }
         $(function () {
-           
+
             //Show modal
                 if (comID > 0 && dataID > 0 && title !== "" && type === "task") {
                     let boxTitle = $(".box-title").text();
@@ -98,7 +98,7 @@
                         chartperiodController.remark(dataID);
 
                     chartperiodController.loadDataComment(true);
-                    chartperiodController.LoadDataActionPlan(dataID, comID);
+                    chartperiodController.LoadDataActionPlan("",dataID, comID);
                     activaTab('pills-home');
 
                 }
@@ -111,7 +111,7 @@
 
                     $("#modal-group-comment-data").modal("show");
                         chartperiodController.remark(dataID);
-                        chartperiodController.LoadDataActionPlan(dataID, comID);
+                        chartperiodController.LoadDataActionPlan("",dataID, comID);
                         chartperiodController.loadDataComment(true);
 
                 }
@@ -819,6 +819,18 @@
             },
             registerEvent() {
 
+                 $('.clearSearchActionPlan').off('click').on('click', function () {
+                     $('.searchActionPlan').val("");
+                      var commentid = Number($('.commentid').text()),
+                                dataid = Number($('.dataid').text());
+                    chartperiodController.LoadDataActionPlan(true,dataid,commentid);
+                });
+                $('.searchActionPlan').off('keyup').on('keyup', function () {
+                     var commentid = Number($('.commentid').text()),
+                                dataid = Number($('.dataid').text());
+                    chartperiodController.LoadDataActionPlan(true,dataid,commentid);
+                });
+
                 //DeleteCommnet
                 $(".deleteComment").off('click').on('click', function () {
                     chartperiodController.deleteComment(Number($(this).data("commentid")))
@@ -868,7 +880,7 @@
                     if (url.indexOf("title") > -1) {
                         window.location.href = window.location.href.replace("remark", "task");
                     }
-                    chartperiodController.LoadDataActionPlan(dataid, commentid);
+                    chartperiodController.LoadDataActionPlan("",dataid, commentid);
                 });
 
                  //$("#dob").datepicker({ dateFormat: 'mm-dd-yy' });
@@ -1174,27 +1186,25 @@
                 });
 
                 $('#modal-group-comment-data').off('hidden.bs.modal').on('hidden.bs.modal', function () {
+                    var userid = $('#user').data('userid'),
+                        dataid = Number($('.dataid').text());
                     if (!($("#modal-group-comment-data2").data('bs.modal') || {}).isShown) {
-                         if (comID > 0 && dataID > 0 && title !== "" && type === "remark") {
-                        let keys = ["type","comID", "dataID", "title"];
-                        window.location.href = removeParam(keys);
+                        if (comID > 0 && dataID > 0 && title !== "" && type === "remark") {
+                            let keys = ["type", "comID", "dataID", "title"];
+                            window.location.href = removeParam(keys);
                         }
-                        console.log("Đã xem comment");
-                        var userid = $('#user').data('userid'),
-                            dataid = Number($('.dataid').text());
-
-                        chartperiodController.addCommentHistory(userid, dataid);
                     }
+                    chartperiodController.addCommentHistory(userid, dataid);
+                    console.log("Đã xem comment");
 
                 });
                 $('#modal-group-comment-data2').off('hidden.bs.modal').on('hidden.bs.modal', function () {
                     if (!($("#modal-group-comment-data").data('bs.modal') || {}).isShown) {
-                        if (comID > 0 && dataID > 0 && title !== ""&& type === "task") {
-                         let keys = ["type","comID", "dataID", "title"];
-                        window.location.href = removeParam(keys);
-                        console.log("Close ActionPlan modal");
-                    }
-
+                        if (comID > 0 && dataID > 0 && title !== "" && type === "task") {
+                            let keys = ["type", "comID", "dataID", "title"];
+                            window.location.href = removeParam(keys);
+                            console.log("Close ActionPlan modal");
+                        }
                     }
 
                 });
@@ -1210,25 +1220,34 @@
 
                 $('#modal-group-comment-data2 .datepickerEdit').off('change').on('change', function () {
                     var id = $(this).data('id'),
-                         value = $(this).val();
+                        value = $(this).val();
 
-                     $.ajax({
-                          type: "Post",
-                          url: "/ChartPeriod/UpdateSheduleDate/",
-                          data: {name:"DeadLine",value:value,pk:id},
-                          success: function(res)
-                          {
-                              console.log(res);
-                              success('Successfully!')
-                             var commentid = Number($('.commentid').text()),
+                    $.ajax({
+                        type: "Post",
+                        url: "/ChartPeriod/UpdateSheduleDate/",
+                        data: { name: "DeadLine", value: value, pk: id },
+                        success: function (res) {
+                            console.log(res);
+
+                            var commentid = Number($('.commentid').text()),
                                 dataid = Number($('.dataid').text());
+                            if (res.status) {
+                                success(res.message)
 
-                             chartperiodController.LoadDataActionPlan(dataid, commentid);
-                         },
-                         error: function (error) {
-                             console.log(error)
-                         }
-                     });
+                            } else {
+                                Swal.fire({
+                                    title: res.message,
+                                    type: 'warning',
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+                            chartperiodController.LoadDataActionPlan("", dataid, commentid);
+
+                        },
+                        error: function (error) {
+                            console.log(error)
+                        }
+                    });
 
                  });
 
@@ -1246,11 +1265,21 @@
                             name: name, value: value, pk: id
                         },
                         success: function (res) {
-                            var commentid = Number($('.commentid').text());
+                            console.log(res);
 
-                            var dataid = Number($('.dataid').text());
+                            var commentid = Number($('.commentid').text()),
+                                dataid = Number($('.dataid').text());
+                            if (res.status) {
+                                success(res.message)
 
-                            chartperiodController.LoadDataActionPlan(dataid, commentid);
+                            } else {
+                                Swal.fire({
+                                    title: res.message,
+                                    type: 'warning',
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+                            chartperiodController.LoadDataActionPlan("", dataid, commentid);
                         }
                     });
                 });
@@ -1263,15 +1292,25 @@
                     params.item = { value: params.value,}
                         return params;
                     },
-                    display: function (value, response) {
-                        if (response) {
-                            var commentid = Number($('.commentid').text()),
+                     success: function(response, newValue) {
+                        console.log(response);
+                             var commentid = Number($('.commentid').text()),
                                 dataid = Number($('.dataid').text());
+                              if (response.status) {
+                                  success(response.message)
 
-                            chartperiodController.LoadDataActionPlan(dataid, commentid);
+                              } else {
+                                  Swal.fire({
+                                    title: response.message,
+                                    type: 'warning',
+                                    confirmButtonText: 'OK'
+                                });
+                              }
+                                 chartperiodController.LoadDataActionPlan("",dataid, commentid);
+                    },
+                    display: function (value, response) {
 
-                            $(this).attr("data-value", value);
-                        }
+
                     },
                         ajaxOptions: {
                             type: "POST",
@@ -1285,18 +1324,28 @@
                     pk: $(this).data("item-id"),
                     url: '/ChartPeriod/UpdateSheduleDate/'+$(this).params,
                     params: function(params) {
-                    params.item = { value: params.value,}
+                        params.item = { value: params.value, }
+                        console.log(params)
                         return params;
                     },
-                    display: function (value, response) {
-                        if (response) {
-
-                        var commentid = Number($('.commentid').text()),
+                     success: function(response, newValue) {
+                        console.log(response);
+                             var commentid = Number($('.commentid').text()),
                                 dataid = Number($('.dataid').text());
+                              if (response.status) {
+                                  success(response.message)
 
-                        chartperiodController.LoadDataActionPlan(dataid, commentid);
-                        $(this).attr("data-value", value);
-                    }
+                              } else {
+                                  Swal.fire({
+                                    title: response.message,
+                                    type: 'warning',
+                                    confirmButtonText: 'OK'
+                                });
+                              }
+                                 chartperiodController.LoadDataActionPlan("",dataid, commentid);
+                    },
+                    display: function (value, response) {
+
                     },
                     ajaxOptions: {
                         type: "POST",
@@ -1358,12 +1407,15 @@
                     }
                 });
             },
-            LoadDataActionPlan(dataid, commentid) {
+            LoadDataActionPlan(changePageSize,dataid, commentid) {
                 $.post('GetAll',
                     {
                         DataID: dataid,
                         CommentID: commentid,
-                        UserID: $('#user').data('userid')
+                        UserID: $('#user').data('userid'),
+                        keyword: $('.searchActionPlan').val().trim(),
+                        page: chartperiodlConfig.pageIndex,
+                        pageSize: chartperiodlConfig.pageSize
                     },
                     function (res) {
                         console.log("ACtionPlan");
@@ -1372,7 +1424,11 @@
                         if (res.status) {
                             var data = res.data;
                             var html = '';
-                            var content='';
+                            var content = '',count;
+                            if (res.page == 1)
+                                count = 0
+                            else
+                             count = (res.page - 1) * res.pageSize
                             $.each(data, function (i, item) {
                                 let currentUser = $('#user').data('userid'),
                                     tagContent = '',
@@ -1430,12 +1486,12 @@
 
                                 //Nếu người nào tạo tag hoặc được chỉ định trong tag thì mới được click vào tag đó
                                  content += `<tr data-id="${item.ID}" style="${item.CreatedBy === currentUser || item.Auditor === currentUser || item.ListUserIDs.indexOf(currentUser) !== -1 ? "" :"pointer-events: none;opacity: 0.5;cursor: not-allowed"}">
-                                                    <td>${(i + 1)}</td>
+                                                    <td>${(count + 1)}</td>
                                                     <td class="text-bold" style="padding-left:15px;">
                                                         <span style="font-weight: 700;cursor: pointer;" class="TitleEdit" data-url="/ChartPeriod/UpdateSheduleDate" data-type="textarea" data-name="Title" data-pk="${item.ID}" data-value="${item.Title}">${item.Title}</span>
                                                     </td>
                                                     <td>
-                                                        <div class="DescriptionEdit" style="font-weight: 700;cursor: pointer;" data-type="textarea" data-name="Description" data-value="${item.Description}" data-pk="${item.ID}">${item.Description}</div>
+                                                        <div class="DescriptionEdit" style="font-weight: 700;cursor: pointer;" data-type="textarea" data-name="Description" data-value="${item.Description || "#N/A"}" data-pk="${item.ID}">${item.Description || "#N/A"}</div>
                                                     </td>
                                                     <td>${tagContent}</td>
                                                     <td>
@@ -1459,7 +1515,7 @@
                                                         </div>
                                                     </td>
                                                 </tr>`;
-
+                                count++;
                             //    //Neu la nguoi tao task hoac la auditor thi moi duoc chinh sua task
                             //    if (item.CreatedBy === $('#user').data('userid') || item.Auditor === $('#user').data('userid'))
                             //    {
@@ -1597,11 +1653,37 @@
 
                             $('.tblActionPlan').empty();
                             $('.tblActionPlan').append(content);
+                              chartperiodController.pagingActionPlan(res.total, function () {
+                            chartperiodController.LoadDataActionPlan("",dataid,commentid);
+                        }, changePageSize);
                             chartperiodController.registerEvent();
 
                         }
 
                     });
+            },
+            pagingActionPlan: function (totalRow, callback, changePageSize) {
+                var totalPage = Math.ceil(totalRow / chartperiodlConfig.pageSize);
+
+                //Unbind pagination if it existed or click change pagesize
+                if ($('#paginationActionPlan a').length === 0 || changePageSize === true) {
+                    $('#paginationActionPlan').empty();
+                    $('#paginationActionPlan').removeData("twbs-pagination");
+                    $('#paginationActionPlan').unbind("page");
+                }
+
+                $('#paginationActionPlan').twbsPagination({
+                    totalPages: totalPage === 0 ? 1 : totalPage,
+                    first: "First",
+                    next: "Next",
+                    last: "Last",
+                    prev: "Previous",
+                    visiblePages: 10,
+                    onPageClick: function (event, page) {
+                        chartperiodlConfig.pageIndex = page;
+                        setTimeout(callback, 500);
+                    }
+                });
             },
             addActionPlan() {
                 var id = $('.addTask .ID').val();
@@ -1668,31 +1750,33 @@
                 if (res.status === true && res.isSendmail === true) {
                     var commentid = Number($('.commentid').text());
                     var dataid = Number($('.dataid').text());
-                    chartperiodController.LoadDataActionPlan(dataid, commentid);
+                    chartperiodController.LoadDataActionPlan("",dataid, commentid);
                     chartperiodController.resetForm();
                     activaTab('pills-home');
                 }
                 else if (res.status === true && res.isSendmail === false) {
                     var commentid = Number($('.commentid').text());
                     var dataid = Number($('.dataid').text());
-                    chartperiodController.LoadDataActionPlan(dataid, commentid);
+                    chartperiodController.LoadDataActionPlan("",dataid, commentid);
                     chartperiodController.resetForm();
                     activaTab('pills-home');
                     console.log("Can not send email")
                 }
                 else if (!res.status) {
-                    var commentid = Number($('.commentid').text());
-                    var dataid = Number($('.dataid').text());
-                    chartperiodController.resetForm();
-                    warning(res.message);
+                       Swal.fire({
+                                title: res.message,
+                                type: 'warning',
+                                confirmButtonText: 'OK'
+                            });
 
                 }
                 else {
                     if (res.message !== "") {
-                        Toast.fire({
-                          type: 'warning',
-                          title: res.message
-                        })
+                         Swal.fire({
+                            title: res.message,
+                            type: 'warning',
+                            confirmButtonText: 'OK'
+                        });
 
                     } else {
                       error( "Failed");
@@ -1709,12 +1793,25 @@
                      url: window.location.href
                 }
                 var promise = $post("/ChartPeriod/Approval", JSON.stringify(data));
-                    promise.then(res => {
-                        success("Successfully!")
-                        var commentid = Number($('.commentid').text());
+                promise.then(res => {
+                    var commentid = Number($('.commentid').text());
                         var dataid = Number($('.dataid').text());
-                        chartperiodController.LoadDataActionPlan(dataid, commentid);
+                    if (res.status) {
+                        success("Successfully!")
+
+                        chartperiodController.LoadDataActionPlan("", dataid, commentid);
+                    }
+                    else {
+                          Swal.fire({
+                            title: res.message,
+                            type: 'warning',
+                            confirmButtonText: 'OK'
+                        });
+                        chartperiodController.LoadDataActionPlan("", dataid, commentid);
                         chartperiodController.resetForm();
+
+                    }
+
                     })
             },
             updateActionPlan(ID,Title,DeadLine,Description,Tag) {
@@ -1724,7 +1821,7 @@
                         if (res) {
                             var commentid = Number($('.commentid').text());
                             var dataid = Number($('.dataid').text());
-                            chartperiodController.LoadDataActionPlan(dataid, commentid);
+                            chartperiodController.LoadDataActionPlan("",dataid, commentid);
                             chartperiodController.resetForm();
                         }
                     });
@@ -1738,11 +1835,21 @@
                     url: window.location.href
                 };
                 let promise = $post("/ChartPeriod/Done", JSON.stringify(data))
-                    promise.then(data => {
-                        success("Successfully!")
+                promise.then(res => {
                         var commentid = Number($('.commentid').text());
                         var dataid = Number($('.dataid').text());
-                        chartperiodController.LoadDataActionPlan(dataid, commentid);
+                        if (res.status) {
+                            success("Successfully!")
+
+                        } else {
+                                  Swal.fire({
+                                title: res.message,
+                                type: 'warning',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+
+                        chartperiodController.LoadDataActionPlan("",dataid, commentid);
                         chartperiodController.resetForm();
                     })
 
@@ -1764,7 +1871,7 @@
                                 if (res.status) {
                                     var commentid = Number($('.commentid').text());
                                     var dataid = Number($('.dataid').text());
-                                    chartperiodController.LoadDataActionPlan(dataid, commentid);
+                                    chartperiodController.LoadDataActionPlan("",dataid, commentid);
                                     success(res.message);
                                 }
                                 else {
@@ -1781,10 +1888,7 @@
             resetForm: function () {
                 $('.Title').val("");
                 $('.ID').val("");
-                $('.Description').each(function () {
-                    $(this).find('li').remove();
-                });
-                $('.Description ul').append("<li></li>")
+                $('.Description').val("");
                 $('.DueDate').val("");
                 $('#Tag').val("");
                 $('#Auditor').val("");

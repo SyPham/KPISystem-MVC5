@@ -67,7 +67,7 @@ namespace KPI.Web.Controllers
         }
         public async Task<JsonResult> LoadActionPlan(string role, int page, int pageSize)
         {
-            return Json(await _dao.LoadActionPlan(role, page, pageSize), JsonRequestBehavior.AllowGet);
+            return Json(await _dao.LoadActionPlan(role, page, pageSize, (Session["UserProfile"] as UserProfileVM).User.ID), JsonRequestBehavior.AllowGet);
         }
         [HttpPost]
         public async Task<ActionResult> Import(FormCollection formCollection)

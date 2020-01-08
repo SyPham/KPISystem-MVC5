@@ -294,7 +294,7 @@ namespace KPI.Model.DAO
                 x.Email,
                 x.Skype,
                 x.Permission,
-                x.Alias
+                x.Alias,
 
             }).ToListAsync();
 
@@ -306,7 +306,7 @@ namespace KPI.Model.DAO
 
             int totalRow = model.Count();
 
-            model = model.OrderBy(x => x.Permission)
+            model = model.OrderByDescending(x => x.ID)
               .Skip((page - 1) * pageSize)
               .Take(pageSize).ToList();
 
@@ -356,23 +356,29 @@ namespace KPI.Model.DAO
         }
         public async Task<object> LoadDataUser(int levelid, string code, int page, int pageSize)
         {
-            var model = await _dbContext.Users.Where(x => x.State == true).Select(x => new
-            {
-                x.ID,
-                x.Username,
-                x.LevelID,
-                x.Role,
-                x.TeamID,
-                FullName = x.Alias,
-                Status = x.LevelID == levelid ? true : false
-            }).ToListAsync();
+            var model = await _dbContext.Users.Where(x => x.Permission != 1 || x.Role != 1 && x.State == true).GroupJoin(_dbContext.Levels,
+                user => user.LevelID,
+                oc => oc.ID,
+                (user, oc) => new { oc, user })
+                .SelectMany(x => x.oc.DefaultIfEmpty(),
+                (user, oc) => new { oc,user })
+                    .Select(x => new
+                    {
+                        x.user.user.ID,
+                        x.user.user.Username,
+                        OCName = x.oc.Name ?? "#N/A",
+                        x.user.user.Role,
+                        x.user.user.TeamID,
+                        FullName = x.user.user.Alias,
+                        Status = x.user.user.LevelID == levelid ? true : false
+                    }).ToListAsync();
             if (!string.IsNullOrEmpty(code))
             {
                 model = model.Where(a => a.Username.Contains(code)).ToList();
             }
             int totalRow = model.Count();
 
-            model = model.OrderBy(x => x.LevelID)
+            model = model.OrderBy(x => x.Username)
               .Skip((page - 1) * pageSize)
               .Take(pageSize).ToList();
 

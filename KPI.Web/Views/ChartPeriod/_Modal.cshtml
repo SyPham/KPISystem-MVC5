@@ -128,9 +128,9 @@
     <!-- /.modal-dialog -->
 </div>
 <div class="modal fade modal-window modal" id="modal-group-comment-data2" >
-    <div class="modal-dialog modal-lg" style="width:95%;overflow-y:scroll">
-        <div class="modal-content">
-            <div class="modal-header" style="background-color:#00a65a;color:#fff">
+    <div class="modal-dialog modal-lg" style="width:95%;overflow:scroll;" >
+        <div class="modal-content box-scrollbar">
+            <div class="modal-header" style="background-color:#00a65a;color:#fff;display:block">
                 <span class="commentid" style="display:none"></span>
 
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -142,7 +142,7 @@
                     <span class="ActionPlanChart"></span>
                 </h4>
             </div>
-            <div class="modal-body">
+            <div class="modal-body ">
                 <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
                     <li class="nav-item">
                         <a class="nav-link" id="pills-home-tab" data-toggle="pill" href="#pills-home"  >List</a>
@@ -153,27 +153,47 @@
 
                 </ul>
                 <div class="tab-content" id="pills-tabContent">
-                    <div class="tab-pane fade box-scrollbar" id="pills-home" style="overflow-x:scroll;">
-                        <div class="listTask">
-                            <table class="table table-condensed table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 10px">No.</th>
-                                        <th>Task name</th>
-                                        <th>Descriptions</th>
-                                        <th>PIC</th>
-                                        <th>Due date</th>
-                                        <th>Update shedule date</th>
-                                        <th>Actual finish date</th>
-                                        <th>Status</th>
-                                        <th class="Approval" style="width: 100px">Approve</th>
-                                        <th class="Option" style="width: 50px">Option</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="tblActionPlan">
-                                  
-                                </tbody>
-                            </table>
+                    <div class="tab-pane fade" id="pills-home" >
+                        <div class="card">
+                            <div class="card-header mt-2">
+                                <div class="input-group">
+                                    <span class="input-group-addon" style="cursor:pointer"><i class="fa fa-search"></i> Search</span>
+
+                                    <input type="text" class="form-control searchActionPlan">
+                                    <span class="input-group-addon clearSearchActionPlan" style="cursor:pointer"><i class="fa fa-close"></i> Clear Search</span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="listTask">
+                                    <table class="table table-condensed table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 10px">No.</th>
+                                                <th>Task name</th>
+                                                <th>Descriptions</th>
+                                                <th>PIC</th>
+                                                <th>Due date</th>
+                                                <th>Update shedule date</th>
+                                                <th>Actual finish date</th>
+                                                <th>Status</th>
+                                                <th class="Approval" style="width: 100px">Approve</th>
+                                                <th class="Option" style="width: 50px">Option</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="tblActionPlan">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body mt-2">
+                            <ul id="paginationActionPlan" class="pagination pagination-sm no-margin">
+                                <li><a href="#">«</a></li>
+                                <li><a href="#">1</a></li>
+                                <li><a href="#">2</a></li>
+                                <li><a href="#">3</a></li>
+                                <li><a href="#">»</a></li>
+                            </ul>
                         </div>
                     </div>
                     <div class="tab-pane fade" id="pills-profile" >
@@ -224,6 +244,7 @@
                 </div>
             </div>
             <div class="modal-footer">
+               
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 <a href="#modal-group-comment-data" data-toggle="modal" data-dismiss="modal" class="btn btn-primary backToRemark">Back to remark</a>
             </div>

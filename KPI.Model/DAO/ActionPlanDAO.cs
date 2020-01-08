@@ -59,6 +59,7 @@ namespace KPI.Model.DAO
             var auditor = obj.Auditor;
             var kpilevelcode = obj.KPILevelCode;
             var catid = obj.CategoryID;
+            var flag = new bool();
             var kpilevelModel = await _dbContext.KPILevels.FirstOrDefaultAsync(x => x.KPILevelCode == kpilevelcode);
 
             if (kpilevelModel == null)
@@ -122,6 +123,8 @@ namespace KPI.Model.DAO
                 var listUserForAuditor = new List<UserViewModel>();
                 var listUserForPIC = new List<UserViewModel>();
 
+                var listAuditors = new List<int>();
+                var listPIC = new List<int>();
                 try
                 {
                     entity.Description = obj.Description;
@@ -148,7 +151,9 @@ namespace KPI.Model.DAO
                                 UserID = userResult.ID
 
                             });
-                            await _dbContext.SaveChangesAsync();
+                            //Add vao list de kiem tra PIC va Auditor
+                            listAuditors.Add(userResult.ID);
+
                             //Thêm vào list Email để gửi mail
 
                             listFullNameTag.Add(userResult.FullName);
@@ -183,9 +188,10 @@ namespace KPI.Model.DAO
                                 });
                                 listFullNameTag.Add(item.FullName);
                             }
+                            //Add vao list de kiem tra PIC va Auditor
+                            listAuditors.AddRange(listUsers.Select(x => x.ID));
 
                             _dbContext.ActionPlanDetails.AddRange(listAuditor);
-                            await _dbContext.SaveChangesAsync();
                         }
                     }
                     //Kiểm tra Tag (PIC)
@@ -200,8 +206,10 @@ namespace KPI.Model.DAO
 
                             if (userItem != null)
                             {
+                                //Add vao list de kiem tra PIC va Auditor
+                                listPIC.Add(userItem.ID);
+
                                 _dbContext.Tags.Add(new Tag { ActionPlanID = entity.ID, UserID = userItem.ID });
-                                await _dbContext.SaveChangesAsync();
 
                                 //Thêm vào list Email để gửi mail
                                 listEmail.Add(new string[5] {
@@ -233,66 +241,94 @@ namespace KPI.Model.DAO
                                 });
                                 listFullNameTag.Add(item.FullName);
                             }
+                            //Add vao list de kiem tra PIC va Auditor
+                            listPIC.AddRange(listUsers.Select(x => x.ID));
                             //Lưu db
                             _dbContext.Tags.AddRange(listTags);
-                            await _dbContext.SaveChangesAsync();
                         }
                     }
 
-                    //BƯớc 4: Thêm mới Notification
+                    //Kiểm tra nếu PIC trùng với Auditor
 
-                    var notifyAuditor = await CreateNotification(new Notification
+                    foreach (var pic in listPIC)
                     {
-                        ActionplanID = entity.ID,
-                        Content = entity.Description,
-                        UserID = entity.UserID,
-                        KPIName = entity.Name,
-                        Link = entity.Link,
-                        Tag = string.Join(",", listFullNameTag),
-                        Title = subject,
-                        Action = "Task-Auditor",
-                        TaskName = entity.Title
-                    });
+                        if (listAuditors.Contains(pic))
+                            flag = true;
+                    }
 
-                    var notifyPIC = await CreateNotification(new Notification
+                    if (flag)
                     {
-                        ActionplanID = entity.ID,
-                        Content = entity.Description,
-                        UserID = entity.UserID,
-                        KPIName = entity.Name,
-                        Link = entity.Link,
-                        Tag = string.Join(",", listFullNameTag),
-                        Title = subject,
-                        Action = "Task",
-                        TaskName = entity.Title
-                    });
-                    foreach (var item in listUserForPIC)
-                    {
-                        //Thêm vào chi tiết thông báo
-                        listNotificationDetail.Add(new NotificationDetail
+                        _dbContext.ActionPlans.Remove(_dbContext.ActionPlans.Find(entity.ID));
+                        //_dbContext.ActionPlanDetails.RemoveRange(_dbContext.ActionPlanDetails.Where(x => x.ActionPlanID == entity.ID));
+                        //_dbContext.Tags.RemoveRange(_dbContext.Tags.Where(x => x.ActionPlanID == entity.ID));
+                        await _dbContext.SaveChangesAsync();
+                        return new AddCommentVM
                         {
-                            UserID = item.ID,
-                            Seen = false,
-                            URL = notifyPIC.Link,
-                            NotificationID = notifyPIC.ID
+                            Status = false,
+                            ListEmails = new List<string[]>(),
+                            Message = "Warning! PIC and Auditor can not same!",
+                        };
+                    }
+                    else
+                    {
+                        await _dbContext.SaveChangesAsync();
+
+
+                        //BƯớc 4: Thêm mới Notification
+
+                        var notifyAuditor = await CreateNotification(new Notification
+                        {
+                            ActionplanID = entity.ID,
+                            Content = entity.Description,
+                            UserID = entity.UserID,
+                            KPIName = entity.Name,
+                            Link = entity.Link,
+                            Tag = string.Join(",", listFullNameTag),
+                            Title = subject,
+                            Action = "Task-Auditor",
+                            TaskName = entity.Title
                         });
 
-                    }
-                    foreach (var item in listUserForAuditor)
-                    {
-                        //Thêm vào chi tiết thông báo
-                        listNotificationDetail.Add(new NotificationDetail
+                        var notifyPIC = await CreateNotification(new Notification
                         {
-                            UserID = item.ID,
-                            Seen = false,
-                            URL = notifyAuditor.Link,
-                            NotificationID = notifyAuditor.ID
+                            ActionplanID = entity.ID,
+                            Content = entity.Description,
+                            UserID = entity.UserID,
+                            KPIName = entity.Name,
+                            Link = entity.Link,
+                            Tag = string.Join(",", listFullNameTag),
+                            Title = subject,
+                            Action = "Task",
+                            TaskName = entity.Title
                         });
+                        foreach (var item in listUserForPIC)
+                        {
+                            //Thêm vào chi tiết thông báo
+                            listNotificationDetail.Add(new NotificationDetail
+                            {
+                                UserID = item.ID,
+                                Seen = false,
+                                URL = notifyPIC.Link,
+                                NotificationID = notifyPIC.ID
+                            });
 
+                        }
+                        foreach (var item in listUserForAuditor)
+                        {
+                            //Thêm vào chi tiết thông báo
+                            listNotificationDetail.Add(new NotificationDetail
+                            {
+                                UserID = item.ID,
+                                Seen = false,
+                                URL = notifyAuditor.Link,
+                                NotificationID = notifyAuditor.ID
+                            });
+
+                        }
+                        //Lưu Db
+                        _dbContext.NotificationDetails.AddRange(listNotificationDetail);
+                        await _dbContext.SaveChangesAsync();
                     }
-                    //Lưu Db
-                    _dbContext.NotificationDetails.AddRange(listNotificationDetail);
-                    await _dbContext.SaveChangesAsync();
                     return new AddCommentVM
                     {
                         Status = true,
@@ -306,7 +342,7 @@ namespace KPI.Model.DAO
                     var message = ex.Message;
                     return new AddCommentVM
                     {
-                        Status = true,
+                        Status = false,
                         ListEmails = listEmail
                     };
                 }
@@ -630,7 +666,7 @@ namespace KPI.Model.DAO
                 var actionPlan = await _dbContext.ActionPlans.FindAsync(id);
                 var actionPlanDetail = await _dbContext.ActionPlanDetails.Where(x => x.ActionPlanID == actionPlan.ID).Select(x => x.UserID).ToListAsync();
 
-                if (!actionPlanDetail.Contains(userid))
+                if (!actionPlanDetail.Contains(userid) || actionPlan.UserID != userid)
                     return new
                     {
                         status = false,
@@ -678,19 +714,25 @@ namespace KPI.Model.DAO
 
             var user = _dbContext.Users;
             var model = await _dbContext.ActionPlans.FirstOrDefaultAsync(x => x.ID == id);
+
             var userTags = _dbContext.Tags.Where(x => x.ActionPlanID == model.ID).Select(x => x.UserID);
-            var userAuditors = _dbContext.Tags.Where(x => x.ActionPlanID == model.ID).Select(x => x.UserID);
+
+            var userAuditors = _dbContext.ActionPlanDetails.Where(x => x.ActionPlanID == model.ID).Select(x => x.UserID);
+
             var listDetails = new List<NotificationDetail>();
             listuserChecking.Add(model.UserID);
             listuserChecking.AddRange(userAuditors);
-          
+
             //Kiểm tra nếu là người tạo hoặc auditor thì mới dc aprove
             if (!listuserChecking.Contains(aproveBy))
             {
-                return Tuple.Create(new List<string[]>(), false, "");
+                return Tuple.Create(new List<string[]>(), false, "You are not Owner or Auditor!");
             }
+            if (model.Status == false)
+                return Tuple.Create(new List<string[]>(), false, "PIC has not updated its status yet!");
             model.ApprovedBy = aproveBy;
             model.ApprovedStatus = !model.ApprovedStatus;
+            model.ActualFinishDate = DateTime.Now;
             try
             {
                 await _dbContext.SaveChangesAsync();
@@ -742,7 +784,7 @@ namespace KPI.Model.DAO
             {
                 //logger
                 new ErrorMessageDAO().Add(new ErrorMessage { Name = ex.Message, Function = "Approval" });
-                return Tuple.Create(new List<string[]>(), true, "");
+                return Tuple.Create(new List<string[]>(), true, ex.Message);
             }
         }
         public async Task<Tuple<List<string[]>, bool, string>> Done(int id, int userid, string KPILevelCode, int CategoryID)
@@ -752,13 +794,13 @@ namespace KPI.Model.DAO
             var userTags = _dbContext.Tags.Where(x => x.ActionPlanID == model.ID).Select(x => x.UserID);
             if (!userTags.Contains(userid))
             {
-                return Tuple.Create(new List<string[]>(), false, "");
+                return Tuple.Create(new List<string[]>(), false, "You are not PIC of this action plan!");
             }
             var listDetails = new List<NotificationDetail>();
             var listEmail = new List<string[]>();
             var user = _dbContext.Users;
             //Chua duyet thi moi cho update lai status
-            if (!model.ApprovedStatus)
+            if (model.ApprovedStatus == false)
             {
                 //B1: Update status xong thi thong bao den cac user lien quan va owner
                 model.Status = !model.Status;
@@ -769,7 +811,6 @@ namespace KPI.Model.DAO
                 else
                 {
                     model.ActualFinishDate = DateTime.Now;
-
                 }
                 //B2: Thong bao den owner va auditor khi hoan thanh
                 var kpiLevel = _dbContext.KPILevels.FirstOrDefault(x => x.KPILevelCode == KPILevelCode);
@@ -835,10 +876,10 @@ namespace KPI.Model.DAO
             }
             else
             {
-                return Tuple.Create(new List<string[]>(), false, "");
+                return Tuple.Create(new List<string[]>(), false, "You are not update status when an owner or an auditor of action plan already approved!");
             }
         }
-        public async Task<object> GetAll(int DataID, int CommentID, int userid)
+        public async Task<object> GetAll(int DataID, int CommentID, int userid, string keyword, int page, int pageSize)
         {
             var userModel = await _dbContext.Users.FirstOrDefaultAsync(x => x.ID == userid);
             var permission = _dbContext.Permissions;
@@ -858,7 +899,8 @@ namespace KPI.Model.DAO
                     x.UserID,
                     IsBoss = (int?)permission.FirstOrDefault(a => a.ID == userModel.Permission).ID < 3 ? true : false,
                     CreatedBy = x.UserID,
-                    x.Auditor
+                    x.Auditor,
+                    x.CreateTime
                 })
                 .ToListAsync();
             var model = data
@@ -877,13 +919,31 @@ namespace KPI.Model.DAO
                 CreatedBy = x.UserID,
                 ListUserIDs = _dbContext.Tags.Where(a => a.ActionPlanID == x.ID).Select(a => a.UserID).ToList(),
                 ListAuditorIDs = _dbContext.ActionPlanDetails.Where(a => a.ActionPlanID == x.ID).Select(a => a.UserID).ToList(),
-                Auditor = x.Auditor
+                Auditor = x.Auditor,
+                CreatedByName = _dbContext.Users.Find(x.CreatedBy)?.Alias ?? "#N/A",
+                CreatedTime = x.CreateTime
             }).ToList();
+
+            int total = model.Count();
+            if (!keyword.IsNullOrEmpty())
+            {
+                model = model.Where(x => x.Title.Contains(keyword)
+                                        || x.Description.Contains(keyword)
+                                        || x.CreatedByName.Contains(keyword)
+                                        || x.Tag.Contains(keyword)).ToList();
+            }
+            model = model.OrderByDescending(x => x.CreatedTime)
+             .Skip((page - 1) * pageSize)
+             .Take(pageSize).ToList();
+
             return new
             {
                 status = true,
                 data = model,
-
+                total = total,
+                page,
+                pageSize,
+                totalPage = (int)Math.Ceiling((double)total / pageSize),
             };
         }
         public ActionPlan GetbyID(int ID)
@@ -1251,16 +1311,35 @@ namespace KPI.Model.DAO
                 return false;
             }
         }
-        public async Task<bool> UpdateSheduleDate(string name, string value, string pk, int userid)
+        public async Task<object> UpdateSheduleDate(string name, string value, string pk, int userid)
         {
             try
             {
-
+                var listuserChecking = new List<int>();
                 var id = pk.ToSafetyString().ToInt();
-                var item = await _dbContext.ActionPlans.FirstOrDefaultAsync(x => x.UserID == userid && x.ID == id);
+                var listDetails = new List<NotificationDetail>();
+
+                var item = await _dbContext.ActionPlans.FirstOrDefaultAsync(x => x.ID == id);
+
+                var userAuditors = _dbContext.ActionPlanDetails.Where(x => x.ActionPlanID == item.ID).Select(x => x.UserID);
+
+                listuserChecking.Add(item.UserID);
+                listuserChecking.AddRange(userAuditors);
+                if (!listuserChecking.Contains(userid))
+                {
+                    return new
+                    {
+                        message = "You are not Owner or Auditor!",
+                        status = false
+                    };
+                }
                 if (item == null)
                 {
-                    return false;
+                    return new
+                    {
+                        message = "Error! Please contact to administrator!",
+                        status = false
+                    };
                 }
                 if (name.ToLower() == "title")
                 {
@@ -1300,11 +1379,19 @@ namespace KPI.Model.DAO
                 }
 
                 await _dbContext.SaveChangesAsync();
-                return true;
+                return new
+                {
+                    message = "Successfully!",
+                    status = true
+                };
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return false;
+                return new
+                {
+                    message = ex.Message,
+                    status = false
+                };
             }
         }
         public async Task<bool> Update(string name, string value, string pk)

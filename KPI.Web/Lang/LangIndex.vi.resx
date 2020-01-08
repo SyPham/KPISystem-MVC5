@@ -118,24 +118,24 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Add_Label" xml:space="preserve">
-    <value>Thêm Mới</value>
+    <value>Add</value>
   </data>
   <data name="Close_Label" xml:space="preserve">
-    <value>Đóng</value>
+    <value>Close</value>
   </data>
   <data name="Collapse_Label" xml:space="preserve">
-    <value>Thu Gọn</value>
+    <value>Collapse</value>
   </data>
   <data name="Delete_Label" xml:space="preserve">
-    <value>Xóa</value>
+    <value>Delete</value>
   </data>
   <data name="Edit_Label" xml:space="preserve">
-    <value>Sửa</value>
+    <value>Edit</value>
   </data>
   <data name="Expand_Label" xml:space="preserve">
-    <value>Mở Rộng</value>
+    <value>Expand</value>
   </data>
   <data name="Save_Label" xml:space="preserve">
-    <value>Lưu</value>
+    <value>Save</value>
   </data>
 </root>

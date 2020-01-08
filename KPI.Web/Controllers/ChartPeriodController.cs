@@ -46,7 +46,7 @@ namespace KPI.Web.Controllers
                 BreadCrumb.SetLabel("Chart / Yearly");
             }
 
-            var model = await new DataChartDAO().ListDatas(kpilevelcode, catid, period, year, start, end,(Session["UserProfile"] as UserProfileVM).User.ID);
+            var model = await new DataChartDAO().ListDatas(kpilevelcode, catid, period, year, start, end, (Session["UserProfile"] as UserProfileVM).User.ID);
             ViewBag.Model = model;
             return View();
         }
@@ -135,15 +135,15 @@ namespace KPI.Web.Controllers
                                 "<p>Task name : <b>" + data.ListEmailsForAuditor.First()[3] + "</b></p>" +
                                 "<p>Description : " + data.ListEmailsForAuditor.First()[4] + "</p>" +
                                 "<p>Link: <a href='" + data.QueryString + "'>Click Here</a></p>";
-                Thread thread = new Thread( () =>
-                {
-                    Commons.SendMail(data.ListEmailsForAuditor.Select(x => x[1]).ToList(), "[KPI System-03] Action Plan (Add Task - Assign Auditor)", contentAuditor, "Action Plan (Add Task - Assign Auditor)");
+                Thread thread = new Thread(() =>
+               {
+                   Commons.SendMail(data.ListEmailsForAuditor.Select(x => x[1]).ToList(), "[KPI System-03] Action Plan (Add Task - Assign Auditor)", contentAuditor, "Action Plan (Add Task - Assign Auditor)");
 
-                });
-                Thread thread2 = new Thread( () =>
-                {
-                    Commons.SendMail(data.ListEmails.Select(x => x[1]).ToList(), "[KPI System-03] Action Plan (Add Task)", contentForPIC, "Action Plan (Add Task)");
-                });
+               });
+                Thread thread2 = new Thread(() =>
+               {
+                   Commons.SendMail(data.ListEmails.Select(x => x[1]).ToList(), "[KPI System-03] Action Plan (Add Task)", contentForPIC, "Action Plan (Add Task)");
+               });
                 thread.Start();
                 thread2.Start();
 
@@ -158,10 +158,10 @@ namespace KPI.Web.Controllers
             return Json(await new ActionPlanDAO().Delete(id, (Session["UserProfile"] as UserProfileVM).User.ID), JsonRequestBehavior.AllowGet);
         }
         //LoadActionplan
-        public async Task<JsonResult> GetAll(int DataID, int CommentID, int UserID)
+        public async Task<JsonResult> GetAll(int DataID, int CommentID, int UserID, string keyword, int? page, int? pageSize)
         {
             //var userprofile = Session["UserProfile"] as UserProfileVM;
-            return Json(await new ActionPlanDAO().GetAll(DataID, CommentID, UserID), JsonRequestBehavior.AllowGet);
+            return Json(await new ActionPlanDAO().GetAll(DataID, CommentID, UserID, keyword, page ?? 1, pageSize ?? 5), JsonRequestBehavior.AllowGet);
         }
         public async Task<JsonResult> GetByID(int id)
         {
@@ -180,7 +180,7 @@ namespace KPI.Web.Controllers
                                    "<p>Link: <a href='" + model.Item3 + "'>Click Here</a></p>";
                 Commons.SendMail(data.Select(x => x[1]).ToList(), "[KPI System-05] Approved", content, "Action Plan (Approved)");
             }
-            return Json(new { status = model.Item2, isSendmail = true }, JsonRequestBehavior.AllowGet);
+            return Json(new { status = model.Item2, isSendmail = true, message = model.Item3 }, JsonRequestBehavior.AllowGet);
         }
         public async Task<JsonResult> Done(int id, string KPILevelCode, int CategoryID, string url)
         {
@@ -196,7 +196,7 @@ namespace KPI.Web.Controllers
                                     "<p>Link: <a href='" + model.Item3 + "'>Click Here</a></p>";
                 Commons.SendMail(data.Select(x => x[1]).ToList(), "[KPI System-04] Action Plan (Finished Task)", content, "Action Plan (Finished Task)");
             }
-            return Json(new { status = model.Item2, isSendmail = true }, JsonRequestBehavior.AllowGet);
+            return Json(new { status = model.Item2, isSendmail = true, message = model.Item3 }, JsonRequestBehavior.AllowGet);
         }
         public async Task<JsonResult> AddNotification(Notification notification)
         {

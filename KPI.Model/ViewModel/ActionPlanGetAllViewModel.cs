@@ -18,6 +18,8 @@ namespace KPI.Model.ViewModel
         public bool Status { get; set; }
         public bool IsBoss { get; set; }
         public int CreatedBy { get; set; }
+        public string CreatedByName { get; set; }
+
         public string UpdateSheduleDate { get; set; }
         public string ActualFinishDate { get; set; }
         public IEnumerable<Tag> Tags { get; set; }
@@ -25,6 +27,7 @@ namespace KPI.Model.ViewModel
         public List<int> ListAuditorIDs { get; set; }
 
         public int Auditor { get; set; }
+        public DateTime CreatedTime { get; set; }
 
     }
 }

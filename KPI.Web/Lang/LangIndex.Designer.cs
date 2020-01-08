@@ -70,7 +70,7 @@ namespace KPI.Web.Lang {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Close_Label.
+        ///   Looks up a localized string similar to Close.
         /// </summary>
         public static string Close_Label {
             get {
