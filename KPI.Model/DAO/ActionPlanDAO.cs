@@ -665,8 +665,11 @@ namespace KPI.Model.DAO
             {
                 var actionPlan = await _dbContext.ActionPlans.FindAsync(id);
                 var actionPlanDetail = await _dbContext.ActionPlanDetails.Where(x => x.ActionPlanID == actionPlan.ID).Select(x => x.UserID).ToListAsync();
+                var listCheck = new List<int>();
+                listCheck.Add(actionPlan.UserID);
+                listCheck.AddRange(actionPlanDetail);
 
-                if (!actionPlanDetail.Contains(userid) || actionPlan.UserID != userid)
+                if (!listCheck.Contains(userid))
                     return new
                     {
                         status = false,
