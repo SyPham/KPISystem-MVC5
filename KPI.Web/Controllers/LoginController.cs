@@ -32,7 +32,11 @@ namespace KPI.Web.Controllers
             ViewBag.ReturnUrl = returnUrl;
             return View();
         }
-    
+        public ActionResult Index5()
+        {
+          
+            return View();
+        }
         private ActionResult RedirectToLocal(string returnUrl)
         {
             

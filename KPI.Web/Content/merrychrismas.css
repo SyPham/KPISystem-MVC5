@@ -18,8 +18,7 @@ canvas {
     top: 0;
     left: 0;
     z-index: -999;
-    background-image: url('images/christmas-background-pictures-7.jpg');
-    background-size: contain;
+    background-image: url('../Scripts/plugins/particle/background.jpg');
     background-repeat: no-repeat;
     width: 100%;
     height: 100%;
@@ -60,7 +59,7 @@ canvas {
     width: 100%;
     position: absolute;
     bottom: 30%;
-    left: 25%;
+    left: 0;
     height: 60%;
 
 }
@@ -71,7 +70,7 @@ canvas {
     }
 
 .card {
-    border: 1px solid #ffff;
+    border: 1px solid #495057;
 }
 
 .card-login {
